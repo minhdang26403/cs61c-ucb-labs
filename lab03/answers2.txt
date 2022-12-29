@@ -1,0 +1,7 @@
+Find/explain the following components of this assembly file.
+
+- The register representing the variable k: t0
+- The register representing the variable sum: s0
+- The registers acting as pointers to the source and dest arrays: s1 for source and s2 for dest
+- The assembly code for the loop found in the C code
+- How the pointers are manipulated in the assembly code.
