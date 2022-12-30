@@ -46,7 +46,7 @@ main:
     ecall
 
 map:
-    addi sp, sp, -12
+    addi sp, sp, -24
     sw ra, 0(sp)
     sw s1, 4(sp)
     sw s0, 8(sp)
@@ -66,32 +66,39 @@ map:
     # are modified by the callees, even when we know the content inside the functions 
     # we call. this is to enforce the abstraction barrier of calling convention.
 mapLoop:
-    add t1, s0, x0      # load the address of the array of current node into t1
+    lw t1, 0(s0)        # load the address of the array of current node into t1
     lw t2, 4(s0)        # load the size of the node's array into t2
 
-    add t1, t1, t0      # offset the array address by the count
+    lw t3, 16(sp)       # follow the calling convention although callee procedure may not use t3
+    slli t3, t0, 2      # scale the count by 4
+    add t1, t1, t3      # offset the array address by the count
     lw a0, 0(t1)        # load the value at that address into a0
+    sw t1, 12(sp)       # store t1 since calle may use it
+    sw t2, 16(sp)       # store t2 since calle may use it
+    sw t3, 20(sp)       # store t3 since calle may use it
 
     jalr s1             # call the function on that value.
 
+    lw t1, 12(sp)       # restore t1
     sw a0, 0(t1)        # store the returned value back into the array
     addi t0, t0, 1      # increment the count
+    lw t2, 16(sp)       # follow the calling convention although callee procedure may not use t2
     bne t0, t2, mapLoop # repeat if we haven't reached the array size yet
 
-    la a0, 8(s0)        # load the address of the next node into a0
-    lw a1, 0(s1)        # put the address of the function back into a1 to prepare for the recursion
+    lw a0, 8(s0)        # load the address of the next node into a0
+    mv a1, s1           # put the address of the function back into a1 to prepare for the recursion
 
     jal  map            # recurse
 done:
     lw s0, 8(sp)
     lw s1, 4(sp)
     lw ra, 0(sp)
-    addi sp, sp, 12
+    addi sp, sp, 24
     jr ra
 
 mystery:
     mul t1, a0, a0
-    add a0, t1, a0
+    add a0, t1, a0    
     jr ra
 
 create_default_list:
